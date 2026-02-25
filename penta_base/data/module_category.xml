@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+    
+        <record id="module_category_l10n_ec_penta" model="ir.module.category">
+            <field name="name">Localización Penta</field>
+            <field name="description">Módulos personalizados Penta Localización Ecuador</field>
+            <field name="sequence">30</field>
+        </record>
+
+        <record id="module_category_pentalab" model="ir.module.category">
+            <field name="name">PentaLab</field>
+            <field name="description">Módulos personalizados PentaLab</field>
+            <field name="sequence">40</field>
+        </record>
+    
+    </data>
+</odoo>

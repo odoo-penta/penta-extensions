@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+  <record id="view_approval_request_form_viaticos" model="ir.ui.view">
+    <field name="name">approval.request.form.viaticos</field>
+    <field name="model">approval.request</field>
+    <field name="inherit_id" ref="approvals.approval_request_view_form"/>
+    <field name="arch" type="xml">
+
+      <!-- Cabecera viaticos: en columna derecha del formulario -->
+      <xpath expr="//group[@name='request_details']" position="inside">
+        <field name="viaticos_control" invisible="1"/>
+        <field name="viaticos_city_origin_policy" invisible="1"/>
+        <field name="viaticos_city_destination_policy" invisible="1"/>
+        <separator string="Viaticos" invisible="not viaticos_control"/>
+        <field name="viaticos_job_title" readonly="1" invisible="not viaticos_control"/>
+        <field name="viaticos_city_origin_id"
+               invisible="not viaticos_control or viaticos_city_origin_policy == 'no'"
+               required="viaticos_control and viaticos_city_origin_policy == 'required'"/>
+        <field name="viaticos_city_destination_id"
+               invisible="not viaticos_control or viaticos_city_destination_policy == 'no'"
+               required="viaticos_control and viaticos_city_destination_policy == 'required'"/>
+        <field name="viaticos_total_employee" readonly="1" invisible="not viaticos_control"/>
+        <field name="viaticos_total_company" readonly="1" invisible="not viaticos_control"/>
+      </xpath>
+
+    </field>
+  </record>
+
+  <record id="view_approval_product_line_tree_viaticos" model="ir.ui.view">
+    <field name="name">approval.product.line.tree.viaticos</field>
+    <field name="model">approval.product.line</field>
+    <field name="inherit_id" ref="approvals.approval_product_line_view_tree"/>
+    <field name="arch" type="xml">
+      <xpath expr="//list" position="replace">
+        <list editable="bottom" string="Productos" default_order="viaticos_date asc, id asc">
+          <field name="company_id" column_invisible="True"/>
+          <field name="viaticos_date" invisible="not parent.viaticos_control"/>
+          <field name="product_id" required="parent.has_product == 'required'" context="{'search_default_filter_to_purchase': 1}"/>
+          <field name="quantity"
+                 column_invisible="parent.has_quantity == 'no' and not parent.viaticos_control"
+                 required="(parent.has_quantity == 'required' or parent.viaticos_control) and parent.request_status != 'new'"/>
+          <field name="viaticos_importe_solicitado" invisible="not parent.viaticos_control"/>
+          <field name="viaticos_total_solicitado" invisible="not parent.viaticos_control" readonly="1"/>
+          <field name="viaticos_importe_permitido" invisible="not parent.viaticos_control" readonly="1"/>
+          <field name="viaticos_total_permitido" invisible="not parent.viaticos_control" readonly="1"/>
+          <field name="viaticos_paid_by" invisible="not parent.viaticos_control"/>
+          <field name="description"/>
+          <field name="product_uom_id" groups="uom.group_uom" options="{'no_create': True, 'no_open': True}"/>
+          <field name="product_uom_category_id" column_invisible="True"/>
+        </list>
+      </xpath>
+    </field>
+  </record>
+</odoo>

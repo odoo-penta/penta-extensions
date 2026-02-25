@@ -1,0 +1,21 @@
+{
+    'name': 'Partner Parroquias',
+    'version': '18.0.1.0.3',
+    "license": "LGPL-3",
+    'category': 'Contacts',
+    'summary': 'Agrega un campo de parroquias en los contactos',
+    'author': 'PentaLab',
+    'depends': ['base', 'contacts','account'],
+    'data': [
+        'data/ec_divisions_region.xml',
+        'views/res_partner_views.xml',
+        'views/res_country_state_city.xml',
+        'views/res_country_state_city_parroquia_views.xml',
+        'views/res_country_state_region_views.xml',
+        'views/res_country_state_list_inherit.xml',
+        'security/ir.model.access.csv',
+    ],
+    'installable': True,
+    'application': False,
+    'post_init_hook': '_main_load_cities_from_csv',
+}
