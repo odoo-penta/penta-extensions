@@ -414,11 +414,14 @@ class ArchivoModel(models.Model):
 
                 if impuestos:
                     for imp in impuestos:
+                        codDocSustento = imp.findtext('codDocSustento', '0')
+                        if codDocSustento == '22':
+                            self.bank_withholding = True
                         porcentaje = float(imp.findtext('porcentajeRetener', '0') or 0)
 
                         tax = self.env['account.tax'].search([
                             ('tax_group_id.name', 'in', [
-                                'Retención IVA en Compras',
+                                'Retención IVA en Ventas',
                                 'Purchase Profit Withhold',
                             ]),
                             ('amount_type', '=', 'percent'),
@@ -446,12 +449,15 @@ class ArchivoModel(models.Model):
                 else:
                     retenciones = comprobante_root.findall('.//retenciones/retencion')
                     doc_sustento = comprobante_root.find('.//docSustento/numDocSustento')
+                    codDocSustento = comprobante_root.find('.//docSustento/codDocSustento')
+                    if codDocSustento.text == '22':
+                        self.bank_withholding = True
                     for ret in retenciones:
                         porcentaje = float(ret.findtext('porcentajeRetener', '0') or 0)
 
                         tax = self.env['account.tax'].search([
                             ('tax_group_id.name', 'in', [
-                                'Retención IVA en Compras',
+                                'Retención IVA en Ventas',
                                 'Purchase Profit Withhold',
                             ]),
                             ('amount_type', '=', 'percent'),
@@ -680,9 +686,9 @@ class ArchivoModel(models.Model):
                     }
                 }
             else:
-                self.create_retention()
+                self.create_retention(receptor)
     
-    def create_retention(self):
+    def create_retention(self, receptor):
 
         xml_text = base64.b64decode(self.xml_file or b'').decode('utf-8')
         root = ET.fromstring(xml_text)
@@ -757,10 +763,15 @@ class ArchivoModel(models.Model):
         if not config or not config.advance_docs_journal_id:
             raise UserError("No se ha configurado un Diario de Retenciones en 'Configuración de Diario de Retenciones'.")
 
-        journal = config.advance_docs_journal_id
-
-        if not journal:
-            raise UserError("No existe un Diario configurado para Retenciones")
+        if self.bank_withholding:
+            journal = config.bank_withholding_journal_id
+            if not journal:
+                raise UserError("No existe un Diario configurado para Retenciones Bancarias")
+        else:
+            journal = config.advance_docs_journal_id
+            if not journal:
+                raise UserError("No existe un Diario configurado para Retenciones")
+                
         withholding = self.withholding_line_ids[0]
         num_doc_sustento = withholding.numdoc_sustento
         num_doc_sustento_fact = self._format_num_doc_sustento(num_doc_sustento)
@@ -776,7 +787,7 @@ class ArchivoModel(models.Model):
             #raise UserError('La factura de sustento ' + num_doc_sustento_formateado + ' no se encuentra en el sistema.')
             # Crear docuemnto automáticamente si no se encuentra
             account_move = self.env['account.move'].create({
-                'partner_id': account_move.partner_id.id,
+                'partner_id': account_move.partner_id.id if account_move else receptor.id,
                 'journal_id': journal.id,
                 'date': fecha_formateada,
                 'invoice_date': fecha_formateada,
@@ -829,13 +840,12 @@ class ArchivoModel(models.Model):
                    line.write({'account_id': nuevo_account_id,'name': 'Retención'})
         else:
             # Validar que la fecha de la factura coincida con la fecha de la retención
-            # if account_move.date != fecha_formateada:
-            #     raise UserError(
-            #         "La fecha contable de la factura (%s) no coincide con la fecha de emisión de la retención (%s)." %
-            #         (account_move.date.strftime('%Y-%m-%d'), fecha_formateada)
-            #     )
+            if account_move.date != fecha_formateada:
+                raise UserError(
+                    "La fecha contable de la factura (%s) no coincide con la fecha de emisión de la retención (%s)." %
+                    (account_move.date.strftime('%Y-%m-%d'), fecha_formateada)
+                )
             
-            # Validar que la base imponible de la retención coincida con la de la factura
             base_retencion_total = sum([float(det['base_imponible']) for det in detalles_retencion])
             base_factura = account_move.amount_untaxed
 
@@ -844,60 +854,34 @@ class ArchivoModel(models.Model):
                     "La base imponible de la retención (%.2f) no coincide con el valor imponible de la factura (%.2f)." %
                     (base_retencion_total, base_factura)
                 )
-            
-            # Validar que no exista otra retención activa para esta factura
-            retenciones_existentes = self.env['account.move'].search([
-                ('move_type', '=', 'entry'),
-                ('l10n_ec_related_withhold_line_ids.l10n_ec_withhold_invoice_id', '=', account_move.id),
-                ('state', '!=', 'cancel'),
-                ('company_id', '=', self.env.company.id)
-            ])
 
-            if retenciones_existentes:
-                ret = retenciones_existentes[0]
-                raise UserError(_(
-                    "Ya existe una retención activa asociada a esta factura:\n"
-                    "- Número: %s\n"
-                    "Solo puede registrar una nueva si la anterior está anulada."
-                ) % (ret.name))
-
-            # Si no hay retención existente → crear nueva
-            
-            account = self.env['account.move'].create({
-                'move_type': 'entry',
-                'partner_id': account_move.partner_id.id,
-                'invoice_date': fecha_formateada,
-                'company_id': self.env.company.id,
-                'ref': registro.get('SERIE_COMPROBANTE'),
-                'l10n_ec_withhold_date': fecha_formateada,
+            # Crear wizard con contexto de la factura
+            wizard = self.env['l10n_ec.wizard.account.withhold'].with_context(
+                active_model='account.move',
+                active_ids=[account_move.id],
+            ).create({
                 'journal_id': journal.id,
-                'l10n_latam_document_number': registro.get('SERIE_COMPROBANTE'),
-                'l10n_latam_document_type_id': self.env['l10n_latam.document.type'].search([
-                    ('code', '=', '07')
-                ], limit=1).id,
-                'l10n_ec_authorization_number': registro.get('CLAVE_ACCESO'),
-                'amount_total': sum([float(detalle['valor_retenido']) for detalle in detalles_retencion]),
-                'amount_tax': 0.0,
-                'amount_untaxed': 0.0,
+                'document_number': registro.get('CLAVE_ACCESO'),
             })
 
-            account.write({'l10n_ec_related_withhold_line_ids': [(0, 0, {
-                'move_id': account.id,
-                'account_id': detalle['cuenta'],
-                'balance': float(detalle['base_imponible']),
-                'price_unit': float(detalle['base_imponible']),
-                'price_subtotal': 0,
-                'l10n_ec_withhold_invoice_id': account_move.id,
-                'tax_ids': [detalle['tipo_retencion']]
-            }) for detalle in detalles_retencion]})
+            # Crear líneas del wizard
+            wizard.withhold_line_ids = [(0, 0, {
+                'tax_id': detalle['tipo_retencion'],   # ID del impuesto de retención
+                'base': float(detalle['base_imponible']),
+                'amount': float(detalle['valor_retenido']),
+            }) for detalle in detalles_retencion]
 
-            for line in account.l10n_ec_related_withhold_line_ids:
-                if line.l10n_ec_withhold_invoice_id:
-                    line.write({'l10n_ec_withhold_invoice_id': account_move.id})
+            # Crear y postear retención desde el wizard
+            withhold_move = wizard.action_create_and_post_withhold()
 
-            if account:
-                self.write({'state': 'validado'})
-            return account
+            # Actualizar únicamente campos informativos / legales
+            withhold_move.write({
+                'ref': registro.get('SERIE_COMPROBANTE'),
+                'l10n_latam_document_number': registro.get('SERIE_COMPROBANTE'),
+                'l10n_ec_authorization_number': registro.get('CLAVE_ACCESO'),
+            })
+
+            return withhold_move
 
     def extract_invoice_details(self, root):
         detalles_producto = []

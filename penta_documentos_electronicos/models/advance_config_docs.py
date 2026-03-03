@@ -11,5 +11,11 @@ class AdvanceConfigDocs(models.Model):
         help='Diario utilizado para registrar las retenciones.'
     )
 
+    bank_withholding_journal_id = fields.Many2one(
+        'account.journal',
+        string='Diario de Retenciones Bancarias',
+        help='Diario utilizado para registrar las retenciones bancarias.'
+    )
+    
     def unlink(self):
         raise UserError(_('No se puede eliminar la configuración de anticipos. Solo puede ser editada.'))

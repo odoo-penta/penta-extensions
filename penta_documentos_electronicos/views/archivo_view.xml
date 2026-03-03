@@ -221,6 +221,7 @@
         <field name="arch" type="xml">
             <list string="Diario de Retenciones" create="false" edit="true">
                 <field name="advance_docs_journal_id"/>
+                <field name="bank_withholding_journal_id"/>
             </list>
         </field>
     </record>
@@ -234,6 +235,7 @@
                 <sheet>
                     <group>
                         <field name="advance_docs_journal_id"/>
+                        <field name="bank_withholding_journal_id"/>
                     </group>
                 </sheet>
             </form>
@@ -252,7 +254,7 @@
         </field>
     </record>
     <!-- Menú Principal -->
-    <menuitem id="menu_archivo_root" name="Documentos electrónicos" sequence="10" groups="account.group_account_user,account.group_account_manager,account.group_account_basic"/>
+    <menuitem id="menu_archivo_root" name="Documentos electrónicos" sequence="10" groups="account.group_account_user,account.group_account_manager,account.group_account_basic" web_icon="penta_documentos_electronicos,static/description/icon.png"/>
 
     <!-- Menú -->
     <menuitem id="menu_docs_config" name="Configuración" parent="menu_archivo_root" action="action_configuration_docs" sequence="35" groups="account.group_account_user,account.group_account_manager"/>
