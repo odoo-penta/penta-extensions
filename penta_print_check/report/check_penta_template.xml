@@ -146,10 +146,10 @@
                                         <t t-esc="ml.account_id.name.upper()"/>
                                     </t>
                                     <t t-if="line.field_key == 'move_account_debit'">
-                                        <t t-esc="ml.check_debit"/>
+                                        <t t-esc="'%.2f' % ml.check_debit"/>
                                     </t>
                                     <t t-if="line.field_key == 'move_account_credit'">
-                                        <t t-esc="ml.check_credit"/>
+                                        <t t-esc="'%.2f' % ml.check_credit"/>
                                     </t>
 
                                 </div>
@@ -341,10 +341,10 @@
                                         <t t-esc="ml.account_id.name.upper()"/>
                                     </t>
                                     <t t-if="line.field_key == 'move_account_debit'">
-                                        <t t-esc="ml.check_debit"/>
+                                        <t t-esc="'%.2f' % ml.check_debit"/>
                                     </t>
                                     <t t-if="line.field_key == 'move_account_credit'">
-                                        <t t-esc="ml.check_credit"/>
+                                        <t t-esc="'%.2f' % ml.check_credit"/>
                                     </t>
 
                                 </div>
