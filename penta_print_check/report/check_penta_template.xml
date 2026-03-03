@@ -104,8 +104,8 @@
                         <t t-set="move_lines" t-value="o.move_id.line_ids.sorted(key=lambda l: l.debit, reverse=True)"/>
 
                         <!-- TOTALES LINEAS APUNTES -->
-                        <t t-set="total_debit" t-value="sum(move_lines.mapped('debit'))"/>
-                        <t t-set="total_credit" t-value="sum(move_lines.mapped('credit'))"/>
+                        <t t-set="total_debit" t-value="round(sum(move_lines.mapped('debit')), 2)"/>
+                        <t t-set="total_credit" t-value="round(sum(move_lines.mapped('credit')), 2)"/>
 
 
                         <!-- Definir espacio de mm en filas de apuntes (10) -->
@@ -146,10 +146,10 @@
                                         <t t-esc="ml.account_id.name.upper()"/>
                                     </t>
                                     <t t-if="line.field_key == 'move_account_debit'">
-                                        <t t-esc="'%.2f' % ml.check_debit"/>
+                                        <t t-esc="ml.check_debit"/>
                                     </t>
                                     <t t-if="line.field_key == 'move_account_credit'">
-                                        <t t-esc="'%.2f' % ml.check_credit"/>
+                                        <t t-esc="ml.check_credit"/>
                                     </t>
 
                                 </div>
@@ -299,8 +299,8 @@
                         <t t-set="move_lines" t-value="o.move_id.line_ids.sorted(key=lambda l: l.debit, reverse=True)"/>
 
                         <!-- TOTALES LINEAS APUNTES -->
-                        <t t-set="total_debit" t-value="sum(move_lines.mapped('debit'))"/>
-                        <t t-set="total_credit" t-value="sum(move_lines.mapped('credit'))"/>
+                        <t t-set="total_debit" t-value="round(sum(move_lines.mapped('debit')), 2)"/>
+                        <t t-set="total_credit" t-value="round(sum(move_lines.mapped('credit')), 2)"/>
 
 
                         <!-- Definir espacio de mm en filas de apuntes (10) -->
@@ -341,10 +341,10 @@
                                         <t t-esc="ml.account_id.name.upper()"/>
                                     </t>
                                     <t t-if="line.field_key == 'move_account_debit'">
-                                        <t t-esc="'%.2f' % ml.check_debit"/>
+                                        <t t-esc="ml.check_debit"/>
                                     </t>
                                     <t t-if="line.field_key == 'move_account_credit'">
-                                        <t t-esc="'%.2f' % ml.check_credit"/>
+                                        <t t-esc="ml.check_credit"/>
                                     </t>
 
                                 </div>
