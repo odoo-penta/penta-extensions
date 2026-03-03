@@ -194,10 +194,6 @@ class Popup(models.TransientModel):
         if tipo not in ('Factura', 'Comprobante de Retención'):
             return False
 
-        partner = self.env['res.partner'].search(
-            [('vat', '=', r.get('RUC_EMISOR'))], limit=1
-        )
-
         vals = {
             'fecha_subida': fields.Datetime.now(),
             'company_id': self.env.company.id,
@@ -220,9 +216,6 @@ class Popup(models.TransientModel):
 
         else:
             vals['numero_factura'] = f"RET-{vals['serie_comprobante']}"
-            vals['bank_withholding'] = bool(
-                partner and partner.bank_withholding_agent
-            )
 
         return vals
 
@@ -325,7 +318,7 @@ class Popup(models.TransientModel):
 
                 tax = self.env['account.tax'].search([
                     ('tax_group_id.name', 'in', [
-                        'Retención IVA en Compras',
+                        'Retención IVA en Ventas',
                         'Purchase Profit Withhold',
                     ]),
                     ('amount_type', '=', 'percent'),
@@ -358,7 +351,7 @@ class Popup(models.TransientModel):
 
                 tax = self.env['account.tax'].search([
                     ('tax_group_id.name', 'in', [
-                        'Retención IVA en Compras',
+                        'Retención IVA en Ventas',
                         'Purchase Profit Withhold',
                     ]),
                     ('amount_type', '=', 'percent'),
