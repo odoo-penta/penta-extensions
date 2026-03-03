@@ -4,3 +4,4 @@ from . import product_homologation
 from . import account_move
 from . import advance_config_docs
 from . import res_partner_inherit
+from . import account_journal
