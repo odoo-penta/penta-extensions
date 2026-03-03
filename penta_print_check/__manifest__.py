@@ -20,7 +20,7 @@
     'website': 'https://pentalab.tech/',
     'license': 'OPL-1',
     "category": "Accounting",
-    "version": "18.0.0.0.3",
+    "version": "18.0.0.0.4",
     "depends": [
         "account",
         "account_check_printing",
