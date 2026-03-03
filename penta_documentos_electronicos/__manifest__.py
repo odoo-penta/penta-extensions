@@ -15,7 +15,8 @@
         'views/account_move_views.xml',
         'views/res_partner_inherit.xml',
         'wizard/withholding_confirm_wizard_view.xml',
-        'data/advance_docs_data.xml'
+        'data/advance_docs_data.xml',
+        'views/account_journal_inherit_view.xml'
     ],
     'images': ['static/description/icon.png'],
     'installable': True,
